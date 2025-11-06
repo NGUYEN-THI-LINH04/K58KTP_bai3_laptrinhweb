@@ -307,7 +307,7 @@ server {
 
 ```
 ### Website chính :👉 http://nguyenthilinh.com
-<img width="1280" height="592" alt="image" src="https://github.com/user-attachments/assets/43e906d6-6e9f-4f8d-915f-e76524bace7e" />
+<img width="1337" height="667" alt="image" src="https://github.com/user-attachments/assets/71b587ae-441b-4ed0-b50f-a0848eba480f" />
 
 ### Node-RED:👉http://nguyenthilinh.com/nodered
 <img width="1280" height="592" alt="image" src="https://github.com/user-attachments/assets/2e9034dd-a2b5-477e-869f-dea4d585d009" />
