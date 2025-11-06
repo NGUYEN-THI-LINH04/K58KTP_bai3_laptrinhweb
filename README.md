@@ -77,33 +77,143 @@ sudo usermod -aG docker $USER
 newgrp docker
 ## 3. Sử dụng 1 file docker-compose.yml để cài đặt các docker container sau: 
 ### Tạo file docker-compose.yml
+```version: "3.9"
 
-<img width="787" height="495" alt="Screenshot 2025-11-04 222024" src="https://github.com/user-attachments/assets/f5d980ae-3286-4d15-91a9-424e64dab106" />
+services:
+  mariadb:
+    image: mariadb:10.5
+    container_name: mariadb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 12345
+      MYSQL_DATABASE: ecommerce
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: 12345
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mariadb/data:/var/lib/mysql
 
-<img width="627" height="618" alt="image" src="https://github.com/user-attachments/assets/caf7e006-f4c4-4a4a-82d0-9337fe45a43f" />
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    restart: always
+    environment:
+      PMA_HOST: mariadb
+      MYSQL_ROOT_PASSWORD: 12345
+    ports:
+      - "8080:80"
 
-<img width="627" height="430" alt="image" src="https://github.com/user-attachments/assets/54e20b52-ddb7-4a38-bf3c-da3ac53ff261" />
+  influxdb:
+    image: influxdb:1.8
+    container_name: influxdb
+    restart: always
+    ports:
+      - "8086:8086"
+    volumes:
+      - ./influxdb/data:/var/lib/influxdb
 
+  nodered:
+    image: nodered/node-red
+    container_name: nodered
+    restart: always
+    ports:
+      - "1880:1880"
+    volumes:
+      - ./node-red/data:/data
+    depends_on:
+      - mariadb
+      - influxdb
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/data:/var/lib/grafana
+    environment:
+      - GF_SERVER_ROOT_URL=http://nguyenthilinh.com/grafana
+      - GF_SERVER_SERVE_FROM_SUB_PATH=false
+      - GF_SECURITY_ALLOW_EMBEDDING=true
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=123456
+    depends_on:
+      - influxdb
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./web:/usr/share/nginx/html
+    depends_on:
+      - grafana
+      - nodered
+```
 ### Chạy toàn bộ container
+
 docker compose up-d
 <img width="846" height="626" alt="Screenshot 2025-11-03 112853" src="https://github.com/user-attachments/assets/5d73eedd-d717-4db9-b544-803281ca669e" />
 
+## 4.2. Web IOT: Giám sát dữ liệu IOT.
+- Tạo cơ sở dữ liệu trong phpMyAdmin
+
+  <img width="874" height="402" alt="Screenshot 2025-11-05 161033" src="https://github.com/user-attachments/assets/d4925914-6946-4bc8-8a63-ca36ab0e22d8" />
+
+- Tạo Nodered để kết nối với MariaDB
+  
+  <img width="762" height="370" alt="Screenshot 2025-11-06 032302" src="https://github.com/user-attachments/assets/b653e923-d254-4618-8c46-d9925dc7d4d4" />
+
+- Có tính năng login, lưu phiên đăng nhập vào cookie và session
+
+  <img width="881" height="874" alt="Screenshot 2025-11-06 023127" src="https://github.com/user-attachments/assets/1c02d9b2-f455-4dde-a770-b8f01a6c49f7" />
+
+- Kết quả test http://nguyenthilinh.com:1880/api/latest trả về JSON
+
+  <img width="653" height="147" alt="Screenshot 2025-11-06 031712" src="https://github.com/user-attachments/assets/77cde825-1f3f-4b24-a740-7164e45d064c" />
+
+  <img width="700" height="525" alt="Screenshot 2025-11-06 020326" src="https://github.com/user-attachments/assets/0f56fc89-c148-47be-8a9d-930fcf92677e" />
+
+- Kết quả test http://nguyenthilinh.com:1880/api/login
+  <img width="692" height="99" alt="Screenshot 2025-11-06 032254" src="https://github.com/user-attachments/assets/ccb63f3e-be08-4038-9fc0-4c31b158b098" />
+
+-  nodered sẽ lưu dữ liệu mới nhất (dạng update) vào cơ sở dữ liệu mariadb (sử dụng phpmyadmin để tạp table và quản trị lần đầu)
+
+<img width="895" height="877" alt="Screenshot 2025-11-06 023139" src="https://github.com/user-attachments/assets/5421ed5c-9b0c-4d82-a31d-98dc08693e34" />
+
+### 4.2.1.Giao diện web hiển thị cảm biến
+<img width="888" height="849" alt="Screenshot 2025-11-06 024234" src="https://github.com/user-attachments/assets/7fb86548-5193-4fa0-aec5-19de27c98dad" />
+
+
 ## 5.CẤU HÌNH NGINX
 ### File nginx/default.conf:
-
+```
 server {
     listen 80;
-    server_name nguyenthilinh.com;
-    
-    root /usr/share/nginx/html;
-    index index.html;
-    # Trang chủ SPA
+    server_name nguyenthilinh.com www.nguyenthilinh.com;
+
+    # === Gốc: SPA Frontend (Web IoT) ===
     location / {
+        root /usr/share/nginx/html;
+        index index.html;
         try_files $uri $uri/ /index.html;
+
+        # Cache static assets
+        location ~* \.(js|css|png|jpg|jpeg|gif|svg|ico|woff2?|ttf|eot)$ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
     }
 
-    # Node-RED proxy
-    location /nodered/ {
+    # === Node-RED UI (Subpath /nodered) ===
+    location ^~ /nodered/ {
         proxy_pass http://nodered:1880/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
@@ -112,10 +222,40 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Sửa đường dẫn tĩnh trong giao diện Node-RED
+        sub_filter_once off;
+        sub_filter 'href="/'  'href="/nodered/';
+        sub_filter 'src="/'   'src="/nodered/';
+        sub_filter 'action="/' 'action="/nodered/';
+        sub_filter_types text/css text/javascript text/html application/javascript;
+        proxy_set_header Accept-Encoding "";
     }
 
-    # Grafana proxy
-    location /grafana/ {
+    # === Node-RED API (Subpath /api) ===
+    location ^~ /api/ {
+        proxy_pass http://nodered:1880/api/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Cho phép CORS (tránh lỗi khi fetch API)
+        add_header Access-Control-Allow-Origin *;
+        add_header Access-Control-Allow-Methods 'GET, POST, OPTIONS';
+        add_header Access-Control-Allow-Headers 'Origin, Content-Type, Accept, Authorization';
+
+        # Xử lý preflight request
+        if ($request_method = OPTIONS) {
+            return 204;
+        }
+    }
+
+        # === Grafana (Subpath /grafana) ===
+     location /grafana/ {
         proxy_pass http://grafana:3000/;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
@@ -125,7 +265,17 @@ server {
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
     }
+    # === Bảo mật Header ===
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # === 404 fallback cho SPA ===
+    error_page 404 /index.html;
 }
+
+```
 ### Website chính :👉 http://nguyenthilinh.com
 <img width="1280" height="592" alt="image" src="https://github.com/user-attachments/assets/43e906d6-6e9f-4f8d-915f-e76524bace7e" />
 
@@ -135,7 +285,8 @@ server {
 ### Grafana: 👉http://nguyenthilinh.com/grafana
 <img width="760" height="663" alt="Screenshot 2025-11-03 135533" src="https://github.com/user-attachments/assets/a2f412b2-24b3-4318-a90f-a64f8de87c5e" />
 
-
+## 6.KẾT LUẬN
+- Qua quá trình làm bài em đã biết cách tải Ubuntu trên máy ảo VMware 
 
 
 
