@@ -1,0 +1,80 @@
+version: "3.9"
+
+services:
+  mariadb:
+    image: mariadb:10.5
+    container_name: mariadb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 12345
+      MYSQL_DATABASE: ecommerce
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: 12345
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mariadb/data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    restart: always
+    environment:
+      PMA_HOST: mariadb
+      MYSQL_ROOT_PASSWORD: 12345
+    ports:
+      - "8080:80"
+
+  influxdb:
+    image: influxdb:1.8
+    container_name: influxdb
+    restart: always
+    ports:
+      - "8086:8086"
+    volumes:
+      - ./influxdb/data:/var/lib/influxdb
+
+  nodered:
+    image: nodered/node-red
+    container_name: nodered
+    restart: always
+    ports:
+      - "1880:1880"
+    volumes:
+      - ./node-red/data:/data
+    depends_on:
+      - mariadb
+      - influxdb
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/data:/var/lib/grafana
+    environment:
+      - GF_SERVER_ROOT_URL=http://nguyenthilinh.com/grafana
+      - GF_SERVER_SERVE_FROM_SUB_PATH=flase
+      - GF_SECURITY_ALLOW_EMBEDDING=true
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=123456
+    depends_on:
+      - influxdb
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./web:/usr/share/nginx/html
+    depends_on:
+      - grafana
+      - nodered
+

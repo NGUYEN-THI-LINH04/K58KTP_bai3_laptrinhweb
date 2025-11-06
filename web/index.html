@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IoT Dashboard - nguyenthilinh.com</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- === LOGIN FORM === -->
+  <div id="login-box" class="login-container">
+    <div class="login-card">
+      <h2>🔐 Đăng nhập hệ thống IoT</h2>
+      <input id="username" placeholder="Tên đăng nhập" />
+      <input id="password" type="password" placeholder="Mật khẩu" />
+      <button onclick="login()">Đăng nhập</button>
+      <p id="msg" class="error"></p>
+    </div>
+  </div>
+
+  <!-- === DASHBOARD === -->
+  <div id="dashboard" class="dashboard" style="display:none;">
+    <header>
+      <h1>📊 IoT Dashboard</h1>
+      <button class="logout-btn" onclick="logout()">Đăng xuất</button>
+    </header>
+
+    <main>
+      <section class="sensor-section">
+        <h2>Dữ liệu cảm biến</h2>
+        <div id="sensor-list" class="sensor-list">Đang tải dữ liệu...</div>
+      </section>
+
+      <section class="chart-section">
+        <iframe id="grafana-frame"></iframe>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
+
