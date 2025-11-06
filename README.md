@@ -1,4 +1,8 @@
 # K58KTP_bai3_laptrinhweb
+### Giảng viên: Đỗ Duy Cốp
+### Lớp học phần: K58KTP
+### Sinh viên thực hiện: Nguyễn Thị Linh
+
 Yêu cầu     : LẬP TRÌNH ỨNG DỤNG WEB trên nền linux
 1. Cài đặt môi trường linux: SV chọn 1 trong các phương án
  - enable wsl: cài đặt docker desktop
@@ -51,9 +55,35 @@ CÁCH ĐÁNH GIÁ:
 6. Bài làm có dấu ấn, giải thích rõ ràng, hiểu vấn đề: 2đ
 # Bài làm
 # Cấu trúc dự án
-
-<img width="333" height="472" alt="image" src="https://github.com/user-attachments/assets/89b6159e-8b5f-43c4-9d21-33363cff39cb" />
-
+```
+/home/linh/web-ecommerce/   
+│
+├── docker-compose.yml
+│
+├── nginx/
+│   ├── default.conf
+│   └── certs/
+│
+├── node-red/
+│   ├── data/
+│
+├── mariadb/
+│   ├── data/
+│
+├── influxdb/
+│   ├── data/
+│
+├── grafana/
+│   ├── data/
+│
+├── phpmyadmin/
+│
+└── web/
+    ├── index.html
+    ├── js/
+    ├── css/
+    └── assets/
+```
 ### 1. Cài đặt môi trường linux sử dụng VMware: cài đặt ubuntu
    <img width="433" height="433" alt="Ảnh chụp màn hình 2025-11-04 103439" src="https://github.com/user-attachments/assets/f042ea56-5f3b-4372-a48a-21dd04f4dd67" />
    
@@ -286,7 +316,9 @@ server {
 <img width="760" height="663" alt="Screenshot 2025-11-03 135533" src="https://github.com/user-attachments/assets/a2f412b2-24b3-4318-a90f-a64f8de87c5e" />
 
 ## 6.KẾT LUẬN
-- Qua quá trình làm bài em đã biết cách tải Ubuntu trên máy ảo VMware 
+- Qua quá trình làm bài em đã biết cách tải Ubuntu trên máy ảo VMware .Các dịch vụ như MariaDB,phpMyAdmin, Node-RED, InfluxDB, Granfana và Nginx được cấu hình và hoạt động ổn định thông qua file docker-compose.yml.
+- Website dạng SPA giúp người dùng đăng nhập, xem dữ liệu cảm biến theo thời gian thực và biểu đồ lịch sử thông qua Grafana. Node-RED đảm nhiệm thu thập và lưu dữ liệu, trong khi Nginx đóng vai trò web server truy cập thống nhất qua các tên miền cấu hình sẵn.
+- Bài làm giúp em hiểu rõ hơn về cách tích hợp nhiều công nghệ để xây dựng một hệ thống IoT hoàn chỉnh, từ thu thập đến hiển thị dữ liệu, và rèn luyện kỹ năng triển khai thực tế với Docker và Nginx.
 
 
 
